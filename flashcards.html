@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
+    <script src="https://unpkg.com/react@latest/umd/react.development.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/babel-standalone@latest/babel.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.js" crossorigin="anonymous"></script>
+    <!-- Fonts to support Material Design -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <!-- Icons to support Material Design -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <script type="text/javascript" src="http://oss.sheetjs.com/js-xlsx/xlsx.js"></script>
+
+</head>
+<body>
+    <div id="root"></div>
+</body>
+    <script type="text/babel">
+        const load = (event, cb) => {
+            const file = event.target.files[0]
+            const fileReader = new FileReader()
+            fileReader.onload = function (e) {
+                const filename = file.name;
+                // pre-process data
+                let binary = "";
+                const bytes = new Uint8Array(e.target.result);
+                const length = bytes.byteLength;
+                for (var i = 0; i < length; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                const wb = XLSX.read(binary, {type:'binary'});
+                const first_sheet_name = wb.SheetNames[0];
+                const sheetData = wb.Sheets[first_sheet_name]
+                const arr = XLSX.utils.sheet_to_json(sheetData, {header:1})
+                cb(arr)
+            }
+            fileReader.readAsArrayBuffer(file);
+        }
+
+
+        function FlashCard(){
+            const [sheetData, setSheetData] = React.useState(null)
+            const [mainTitle, setMainTitle] = React.useState(null)
+            const [currentQuestion, setCurrentQuestion] = React.useState(null)
+            const [currentAnswer, setCurrentAnswer] = React.useState(null)
+            const [questionArray, setQuestionArray] = React.useState([])
+            const [questionIdx, setQuestionIdx] = React.useState(null)
+
+            React.useEffect(() => {
+                    loadNewQuestion()
+            }, [sheetData, questionIdx])
+
+
+            const parseClipboard = () => {
+            navigator.clipboard.readText().then(function(response){
+                const lines=_.compact(response.split("\n")).map(line => _.compact(line.split("\t")))
+                setSheetData(lines)
+                setQuestionIdx(getRandomIndex(lines.length))
+
+            })
+        }
+
+            function call(data){ 
+                setSheetData(data)
+                setQuestionIdx(getRandomIndex(data.length))
+            }
+
+            const getRandomIndex = (length) =>{
+                return Math.floor(Math.random() * Math.floor(length - 1)) + 1
+            }
+            
+            const dataLoadCallback = (e) => {
+                load(e, call)
+            }
+
+            const loadNewQuestion = () => {
+                if(sheetData && questionIdx){
+                    setMainTitle(_.head(sheetData[0]))
+                    setCurrentAnswer(null)
+                    setCurrentQuestion(sheetData[questionIdx][0])
+                }
+            }
+
+            const loadAnswer = () => {
+                setCurrentAnswer(sheetData[questionIdx][1])
+            }
+
+            return <div>
+                <Typography><h2>{mainTitle}</h2></Typography>
+                <Card 
+                    onClick={currentAnswer ? () => setQuestionIdx(getRandomIndex(sheetData.length)) : loadAnswer}>
+                    <CardActionArea style={{minWidth:500, minHeight:200}}>
+                        <CardContent>
+                            <Typography>
+                                <i>{currentQuestion}</i><br/><br/>
+                                <b>{currentAnswer}</b>  
+                            </Typography>                                                    
+                        </CardContent>
+                    </CardActionArea>
+                </Card>
+                <input
+                    style={{display:"none"}}
+                    id="text-button-file"
+                    onChange={dataLoadCallback}
+                    type="file"
+                />
+                <label htmlFor="text-button-file">
+                    <Button component="span" variant="contained">
+                    Upload
+                    </Button>
+                </label>
+                <Button component="span" variant="contained" onClick={parseClipboard}>
+                    From Clipboard
+                    </Button>
+            </div>
+            return 
+        }
+
+        const {Button, Card, CardActionArea, CardContent, Typography} = MaterialUI;
+        ReactDOM.render(
+            <FlashCard/>,
+            document.querySelector('#root'),
+        );
+    </script>
+</html>
