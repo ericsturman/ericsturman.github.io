@@ -88,16 +88,24 @@
                 setCurrentAnswer(sheetData[questionIdx][1])
             }
 
-            return <div>
+            const getCardContent = () => {
+                return currentQuestion 
+                ?
+                    <Typography>
+                        <i>{currentQuestion}</i><br/><br/>
+                        <b>{currentAnswer}</b>  
+                    </Typography> 
+                :
+                    <Typography>Upload a file or grab data from clipboard.</Typography>
+            }
+
+            return <Container maxWidth="md">
                 <Typography><h2>{mainTitle}</h2></Typography>
                 <Card 
                     onClick={currentAnswer ? () => setQuestionIdx(getRandomIndex(sheetData.length)) : loadAnswer}>
                     <CardActionArea style={{minWidth:500, minHeight:200}}>
                         <CardContent>
-                            <Typography>
-                                <i>{currentQuestion}</i><br/><br/>
-                                <b>{currentAnswer}</b>  
-                            </Typography>                                                    
+                              {getCardContent()}                                                 
                         </CardContent>
                     </CardActionArea>
                 </Card>
@@ -115,11 +123,11 @@
                 <Button component="span" variant="contained" onClick={parseClipboard}>
                     From Clipboard
                     </Button>
-            </div>
+            </Container>
             return 
         }
 
-        const {Button, Card, CardActionArea, CardContent, Typography} = MaterialUI;
+        const {Button, Card, CardActionArea, CardContent, Typography, Container} = MaterialUI;
         ReactDOM.render(
             <FlashCard/>,
             document.querySelector('#root'),
