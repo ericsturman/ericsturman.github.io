@@ -1,3 +1,195 @@
-<a href="flashcards.html">Flash Cards</a>
-<a href="sequence_aligner.html">Sequence Aligner</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bioinformatics Tools</title>
+  <style>
+    :root {
+      --bg-1: #07111f;
+      --bg-2: #0f172a;
+      --card: rgba(15, 23, 42, 0.8);
+      --card-border: rgba(148, 163, 184, 0.2);
+      --text: #e2e8f0;
+      --muted: #a8b3c7;
+      --accent: #7dd3fc;
+      --accent-2: #a78bfa;
+      --success: #34d399;
+      --shadow: 0 20px 60px rgba(15, 23, 42, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(125, 211, 252, 0.15), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.18), transparent 30%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+    }
+
+    .shell {
+      width: min(1100px, 100%);
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(125, 211, 252, 0.08);
+      border: 1px solid rgba(125, 211, 252, 0.2);
+      border-radius: 999px;
+      padding: 0.55rem 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 4rem);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 1rem auto 0;
+      max-width: 700px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      position: relative;
+      display: block;
+      text-decoration: none;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.7));
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.35rem 1.2rem 1.1rem;
+      min-height: 220px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(125, 211, 252, 0.35);
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.55);
+    }
+
+    .icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.18), rgba(167, 139, 250, 0.18));
+      border: 1px solid rgba(125, 211, 252, 0.2);
+      margin-bottom: 1rem;
+    }
+
+    .card h2 {
+      margin: 0 0 0.65rem;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+
+    .meta {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.84rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .meta::after {
+      content: "→";
+      margin-left: 0.45rem;
+      transition: transform 0.18s ease;
+    }
+
+    .card:hover .meta::after {
+      transform: translateX(3px);
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1.25rem;
+      }
+
+      .card {
+        min-height: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div class="eyebrow">ericsturman.github.io</div>
+      <h1>random utilities</h1>
+      <!-- <p class="subtitle">A couple of interactive tools.</p> -->
+    </div>
+
+    <div class="grid">
+      <a class="card" href="flashcards.html">
+        <div class="icon">📚</div>
+        <h2>Flash Cards</h2>
+        <p>Upload a spreadsheet file or paste spreadsheet data to create flash cards.</p>
+        <div class="meta">Open tool</div>
+      </a>
+
+      <a class="card" href="orf_generator.html">
+        <div class="icon">🧬</div>
+        <h2>ORF Generator</h2>
+        <p>Generate random open reading frames and download as CSV or FASTA files.</p>
+        <div class="meta">Open tool</div>
+      </a>
+
+      
+    </div>
+  </div>
+</body>
+</html>
 

@@ -39,6 +39,76 @@
             fileReader.readAsArrayBuffer(file);
         }
 
+        const themeStyles = {
+          page: {
+            minHeight: '100vh',
+            display: 'grid',
+            placeItems: 'center',
+            padding: '2rem',
+            background: 'radial-gradient(circle at top left, rgba(125, 211, 252, 0.15), transparent 28%), radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.18), transparent 30%), linear-gradient(135deg, #07111f, #0f172a)',
+            color: '#e2e8f0',
+            fontFamily: 'Arial, Helvetica, sans-serif'
+          },
+          shell: {
+            width: 'min(900px, 100%)',
+            background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.7))',
+            border: '1px solid rgba(148, 163, 184, 0.2)',
+            borderRadius: '20px',
+            boxShadow: '0 20px 60px rgba(15, 23, 42, 0.45)',
+            padding: '2rem'
+          },
+          eyebrow: {
+            display: 'inline-block',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            color: '#7dd3fc',
+            background: 'rgba(125, 211, 252, 0.08)',
+            border: '1px solid rgba(125, 211, 252, 0.2)',
+            borderRadius: '999px',
+            padding: '0.55rem 0.9rem',
+            marginBottom: '1rem'
+          },
+          title: { margin: 0, fontSize: 'clamp(2.1rem, 4vw, 3.2rem)', letterSpacing: '-0.04em', color: '#e2e8f0' },
+          subtitle: { margin: '0.5rem 0 1.5rem', color: '#a8b3c7', fontSize: '1rem' },
+          card: {
+            background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.7))',
+            border: '1px solid rgba(148, 163, 184, 0.2)',
+            borderRadius: '20px',
+            boxShadow: '0 20px 60px rgba(15, 23, 42, 0.45)',
+            overflow: 'hidden',
+            marginBottom: '1.25rem'
+          },
+          cardAction: { minHeight: 220, padding: '1rem' },
+          actionRow: { display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.5rem' },
+          button: {
+            background: 'linear-gradient(135deg, #7dd3fc, #a78bfa)',
+            color: '#081421',
+            fontWeight: 800,
+            borderRadius: '12px',
+            boxShadow: '0 10px 30px rgba(125, 211, 252, 0.3)',
+            textTransform: 'none'
+          },
+          cardLabel: {
+            color: '#7dd3fc',
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            fontSize: '0.76rem'
+          },
+          question: {
+            color: '#e2e8f0',
+            fontSize: '1.1rem',
+            lineHeight: 1.6
+          },
+          answer: {
+            color: '#a78bfa',
+            fontWeight: 700,
+            fontSize: '1.2rem'
+          }
+        };
+
         function FlashCard(){
             const [sheetData, setSheetData] = React.useState(null)
             const [mainTitle, setMainTitle] = React.useState(null)
@@ -46,29 +116,44 @@
             const [currentAnswer, setCurrentAnswer] = React.useState(null)
             const [questionArray, setQuestionArray] = React.useState([])
             const [questionIdx, setQuestionIdx] = React.useState(null)
+            const [useHeader, setUseHeader] = React.useState(false)
+
+            const getDisplayRows = (rows = sheetData) => {
+                if (!rows || !rows.length) return []
+                return useHeader ? rows.slice(1) : rows
+            }
 
             React.useEffect(() => {
                     loadNewQuestion()
             }, [sheetData, questionIdx])
 
-
             const parseClipboard = () => {
             navigator.clipboard.readText().then(function(response){
                 const lines=_.compact(response.split("\n")).map(line => _.compact(line.split("\t")))
                 setSheetData(lines)
-                setQuestionIdx(getRandomIndex(lines.length))
+                setQuestionIdx(getRandomIndex(getDisplayRows(lines).length))
 
             })
         }
 
             function call(data){ 
                 setSheetData(data)
-                setQuestionIdx(getRandomIndex(data.length))
+                setQuestionIdx(getRandomIndex(getDisplayRows(data).length))
             }
 
             const getRandomIndex = (length) =>{
-                const randNum = Math.floor(Math.random() * Math.floor(length - 1)) + 1
-                return randNum === questionIdx ? getRandomIndex(length) : randNum
+                const validChoices = []
+                for (let i = 0; i < length; i++) {
+                    if (i !== questionIdx) {
+                        validChoices.push(i)
+                    }
+                }
+
+                if (validChoices.length === 0) {
+                    return questionIdx !== null ? questionIdx : 0
+                }
+
+                return validChoices[Math.floor(Math.random() * validChoices.length)]
             }
             
             const dataLoadCallback = (e) => {
@@ -76,64 +161,85 @@
             }
 
             const loadNewQuestion = () => {
-                if(sheetData && questionIdx){
-                    setMainTitle(_.head(sheetData[0]))
+                const rows = getDisplayRows()
+                if (sheetData && rows.length && questionIdx !== null && rows[questionIdx]) {
+                    setMainTitle(useHeader ? _.head(sheetData[0]) : 'Flash Cards')
                     setCurrentAnswer(null)
-                    setCurrentQuestion(sheetData[questionIdx][0])
+                    setCurrentQuestion(rows[questionIdx][0])
                 }
             }
 
             const loadAnswer = () => {
-                setCurrentAnswer(sheetData[questionIdx][1])
+                const rows = getDisplayRows()
+                if (rows.length && questionIdx !== null && rows[questionIdx]) {
+                    setCurrentAnswer(rows[questionIdx][1])
+                }
             }
 
             const getCardContent = () => {
                 return currentQuestion 
                 ?
-                    <Typography>
-                        <i>{currentQuestion}</i><br/><br/>
-                        <b>{currentAnswer}</b>  
+                    <Typography style={themeStyles.question}>
+                        <div style={themeStyles.cardLabel}>Prompt</div>
+                        <div style={{ marginTop: '0.75rem', marginBottom: '1.25rem', fontStyle: 'italic' }}>{currentQuestion}</div>
+                        {currentAnswer && <div style={themeStyles.answer}>{currentAnswer}</div>}
                     </Typography> 
                 :
-                    <Typography>Upload a file or grab data from clipboard.</Typography>
+                    <Typography style={{ color: '#a8b3c7', fontSize: '1.05rem', lineHeight: 1.7 }}>
+                        <div style={themeStyles.cardLabel}>How to load cards</div>
+                        <div style={{ marginTop: '0.75rem' }}>
+                            Upload an Excel or CSV file, or paste tab-delimited rows in the format:<br />
+                            <strong>Question</strong>	<strong>Answer</strong><br />
+                            The app reads the first column as the prompt and the second column as the answer.<br />
+                            Turn on <strong>Use first row as header</strong> if the first row is a title instead of a flashcard. Leave it off to treat that row as a normal question/answer pair.<br />
+                            
+                        </div>
+                    </Typography>
             }
 
-            return <Container maxWidth="md">
-                <Grid container>
-                    <Grid item xs={12} sm={8}>
-                        <Typography variant="h4">{mainTitle}</Typography>
-                    </Grid>
-                    <Grid item sm={4}>
-                        <Typography style={{color:"lightgray", fontStyle: "italic", textAlign: "right"}} variant="h4">FLASHCARDS</Typography>
-                    </Grid>
-                </Grid>
-                <Card 
-                    onClick={currentAnswer ? () => setQuestionIdx(getRandomIndex(sheetData.length)) : loadAnswer}>
-                    <CardActionArea style={{minWidth:500, minHeight:200}}>
-                        <CardContent>
-                              {getCardContent()}                                                 
-                        </CardContent>
-                    </CardActionArea>
-                </Card>
-                <input
-                    style={{display:"none"}}
-                    id="text-button-file"
-                    onChange={dataLoadCallback}
-                    type="file"
-                />
-                <label htmlFor="text-button-file">
-                    <Button component="span" variant="contained">
-                    Upload
-                    </Button>
-                </label>
-                <Button component="span" variant="contained" onClick={parseClipboard}>
-                    From Clipboard
-                    </Button>
-            </Container>
-            return 
+            return <div style={themeStyles.page}>
+                <div style={themeStyles.shell}>
+                    <div style={themeStyles.eyebrow}>Study tools</div>
+                    <h1 style={themeStyles.title}>{mainTitle || 'Flash Cards'}</h1>
+                    <p style={themeStyles.subtitle}>Review imported terms and definitions in an interactive study session.</p>
+
+                    <Card style={themeStyles.card} onClick={currentAnswer ? () => setQuestionIdx(getRandomIndex(getDisplayRows(sheetData).length)) : loadAnswer}>
+                        <CardActionArea style={themeStyles.cardAction}>
+                            <CardContent>
+                                  {getCardContent()}                                                 
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+
+                    <div style={themeStyles.actionRow}>
+                        <input style={{display:'none'}} id="text-button-file" onChange={dataLoadCallback} type="file" />
+                        <label htmlFor="text-button-file">
+                            <Button component="span" variant="contained" style={themeStyles.button}>
+                            Upload
+                            </Button>
+                        </label>
+                        <Button component="span" variant="contained" style={themeStyles.button} onClick={parseClipboard}>
+                            From Clipboard
+                            </Button>
+                    </div>
+
+                    <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={useHeader}
+                                    onChange={(event) => setUseHeader(event.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label={<span style={{ color: '#e2e8f0' }}>Use first row as header</span>}
+                        />
+                    </div>
+                </div>
+            </div>
         }
 
-        const {Button, Card, CardActionArea, CardContent, Typography, Container, Grid} = MaterialUI;
+        const {Button, Card, CardActionArea, CardContent, Typography, Container, Grid, FormControlLabel, Switch} = MaterialUI;
         const root = ReactDOM.createRoot(document.querySelector('#root'));
         root.render(<FlashCard/>);
     </script>
