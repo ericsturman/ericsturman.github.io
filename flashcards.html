@@ -117,6 +117,8 @@
             const [questionArray, setQuestionArray] = React.useState([])
             const [questionIdx, setQuestionIdx] = React.useState(null)
             const [useHeader, setUseHeader] = React.useState(false)
+            const [answerFirst, setAnswerFirst] = React.useState(false)
+            const [revealed, setRevealed] = React.useState(false)
 
             const getDisplayRows = (rows = sheetData) => {
                 if (!rows || !rows.length) return []
@@ -125,7 +127,7 @@
 
             React.useEffect(() => {
                     loadNewQuestion()
-            }, [sheetData, questionIdx])
+            }, [sheetData, questionIdx, useHeader, answerFirst])
 
             const parseClipboard = () => {
             navigator.clipboard.readText().then(function(response){
@@ -166,6 +168,7 @@
                     setMainTitle(useHeader ? _.head(sheetData[0]) : 'Flash Cards')
                     setCurrentAnswer(null)
                     setCurrentQuestion(rows[questionIdx][0])
+                    setRevealed(false)
                 }
             }
 
@@ -176,7 +179,61 @@
                 }
             }
 
+            const handleCardClick = () => {
+                const rows = getDisplayRows()
+                if (!sheetData || !rows.length || questionIdx === null) return
+
+                if (answerFirst) {
+                    if (!revealed) {
+                        setCurrentAnswer(rows[questionIdx][1])
+                        setCurrentQuestion(rows[questionIdx][0])
+                        setRevealed(true)
+                        return
+                    }
+
+                    setQuestionIdx(getRandomIndex(rows.length))
+                    setCurrentAnswer(null)
+                    setCurrentQuestion(rows[questionIdx]?.[0] || null)
+                    setRevealed(false)
+                    return
+                }
+
+                if (currentAnswer) {
+                    setQuestionIdx(getRandomIndex(rows.length))
+                    setCurrentAnswer(null)
+                    return
+                }
+
+                loadAnswer()
+            }
+
             const getCardContent = () => {
+                if (!sheetData || questionIdx === null) {
+                    return <Typography style={{ color: '#a8b3c7', fontSize: '1.05rem', lineHeight: 1.7 }}>
+                        <div style={themeStyles.cardLabel}>How to load cards</div>
+                        <div style={{ marginTop: '0.75rem' }}>
+                            Upload an Excel or CSV file, or paste tab-delimited rows in the format:<br />
+                            <strong>Question</strong>	<strong>Answer</strong><br />
+                            The app reads the first column as the prompt and the second column as the answer.<br />
+                            Turn on <strong>Use first row as header</strong> if the first row is a title instead of a flashcard. Leave it off to treat that row as a normal question/answer pair.<br />
+                            Turn on <strong>Answer first</strong> to practice vocabulary by seeing the answer before the question.
+                        </div>
+                    </Typography>
+                }
+
+                if (answerFirst) {
+                    const answerText = currentAnswer || getDisplayRows()[questionIdx]?.[1]
+                    const questionText = currentQuestion || getDisplayRows()[questionIdx]?.[0]
+
+                    return <Typography style={themeStyles.question}>
+                        <div style={themeStyles.cardLabel}>{revealed ? 'Prompt' : 'Prompt'}</div>
+                        <div style={{ marginTop: '0.75rem', marginBottom: '1.25rem', fontStyle: revealed ? 'italic' : 'normal' }}>
+                            {revealed ? answerText : answerText}
+                        </div>
+                        {revealed && <div style={themeStyles.answer}>{questionText}</div>}
+                    </Typography>
+                }
+
                 return currentQuestion 
                 ?
                     <Typography style={themeStyles.question}>
@@ -192,7 +249,7 @@
                             <strong>Question</strong>	<strong>Answer</strong><br />
                             The app reads the first column as the prompt and the second column as the answer.<br />
                             Turn on <strong>Use first row as header</strong> if the first row is a title instead of a flashcard. Leave it off to treat that row as a normal question/answer pair.<br />
-                            
+                            Turn on <strong>Answer first</strong> to practice vocabulary by seeing the answer before the question.
                         </div>
                     </Typography>
             }
@@ -203,7 +260,7 @@
                     <h1 style={themeStyles.title}>{mainTitle || 'Flash Cards'}</h1>
                     <p style={themeStyles.subtitle}>Review imported terms and definitions in an interactive study session.</p>
 
-                    <Card style={themeStyles.card} onClick={currentAnswer ? () => setQuestionIdx(getRandomIndex(getDisplayRows(sheetData).length)) : loadAnswer}>
+                    <Card style={themeStyles.card} onClick={handleCardClick}>
                         <CardActionArea style={themeStyles.cardAction}>
                             <CardContent>
                                   {getCardContent()}                                                 
@@ -233,6 +290,16 @@
                                 />
                             }
                             label={<span style={{ color: '#e2e8f0' }}>Use first row as header</span>}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={answerFirst}
+                                    onChange={(event) => setAnswerFirst(event.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label={<span style={{ color: '#e2e8f0' }}>Answer first</span>}
                         />
                     </div>
                 </div>
